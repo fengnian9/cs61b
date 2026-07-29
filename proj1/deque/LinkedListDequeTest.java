@@ -197,6 +197,21 @@ public class LinkedListDequeTest {
         Iterator<Integer> seer = test.iterator();
     }
 
+    @Test
+    public void equalsTest(){
+        LinkedListDeque<Integer> test = new LinkedListDeque<>();
+        LinkedListDeque<Integer> test2 = new LinkedListDeque<>();
+
+        test.addFirst(10);
+        test.addFirst(20);
+        test.addFirst(30);
+        test2.addFirst(10);
+        test2.addFirst(20);
+        test2.addFirst(30);
+
+        assertEquals(true,test.equals(test2));
+    }
+
 
 
 

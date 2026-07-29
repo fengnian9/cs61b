@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
  * array deque, resizes at run time
  * @param <T> the generic
  */
-public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int size;
     private int nextFirst;
     private int nextLast;
@@ -16,11 +16,11 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
     /**
      * constructor method
      */
-    public ArrayDeque(){
-        items = (T[])new Object[8];
-        size=0;
-        nextFirst=0;
-        nextLast=1;
+    public ArrayDeque() {
+        items = (T[]) new Object[8];
+        size = 0;
+        nextFirst = 0;
+        nextLast = 1;
 
     }
 
@@ -30,16 +30,18 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
      */
     @Override
     public void addFirst(T item){
-        if (size == items.length){
-            resize(size*2);
+        if (size == items.length) {
+            resize(size * 2);
         }
-        items[nextFirst]=item;
+        items[nextFirst] = item;
         nextFirst = minusOne(nextFirst);
-        size+=1;
+        size += 1;
     }
 
-    private int minusOne(int index){
-        if (index-1 < 0){return index-1+items.length;}
+    private int minusOne(int index) {
+        if (index - 1 < 0) {
+            return index-1+items.length;
+        }
         return (index - 1);
     }
 
@@ -48,17 +50,17 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
      * @param item value of the item added
      */
     @Override
-    public void addLast(T item){
-        if (size == items.length){
-            resize(size*2);
+    public void addLast(T item) {
+        if (size == items.length) {
+            resize(size * 2);
         }
-        items[nextLast]=item;
+        items[nextLast] = item;
         nextLast = addOne(nextLast);
         size+=1;
     }
 
-    private int addOne(int index){
-        return (index+1) % items.length;
+    private int addOne(int index) {
+        return (index + 1) % items.length;
     }
 
 
@@ -67,13 +69,15 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
      * @return returns the size of the deque
      */
     @Override
-    public int size(){return size;}
+    public int size() {
+        return size;
+    }
 
     /**
      * prints the deque
      */
     @Override
-    public void printDeque(){
+    public void printDeque() {
         for (T item : this) {
             System.out.print(item + " ");
         }
@@ -88,7 +92,7 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
             a[i] = get(i);
         }
         items = a;
-        nextFirst = capacity-1;
+        nextFirst = capacity - 1;
         nextLast = size;
     }
 
@@ -97,17 +101,17 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
      * @return returns the item removed
      */
     @Override
-    public T removeFirst(){
+    public T removeFirst() {
         if (size == 0) {
             return null;
         }
-        if (size >= 16 && (items.length/size)>=4){
-            resize(size/2);
+        if (size >= 16 && (items.length / size) >= 4) {
+            resize(items.length / 2);
         }
         nextFirst = addOne(nextFirst);
         T removedItem = items[nextFirst];
-        items[nextFirst]=null;
-        size-=1;
+        items[nextFirst] = null;
+        size -= 1;
         return removedItem;
 
     }
@@ -117,17 +121,17 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
      * @return returns the item removed
      */
     @Override
-    public T removeLast(){
+    public T removeLast() {
         if (size == 0) {
             return null;
         }
-        if (size >= 16 && (items.length/size)>=4){
-            resize(size/2);
+        if (size >= 16 && (items.length / size) >= 4){
+            resize(items.length / 2);
         }
         nextLast = minusOne(nextLast);
         T removedItem = items[nextLast];
-        items[nextLast]=null;
-        size-=1;
+        items[nextLast] = null;
+        size -= 1;
         return removedItem;
 
     }
@@ -142,7 +146,28 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         if (index < 0 || index >= size){
             return null;
         }
-        return items[(nextFirst+index+1)%items.length];
+        return items[(nextFirst + index + 1) % items.length];
+    }
+
+    public boolean equals(Object O) {
+        if (!(O instanceof Deque)) {
+            return false;
+        }
+
+        Deque<?> other = (Deque<?>) O;
+
+        if (this.size() != other.size()) {
+            return false;
+        }
+        for (int i = 0; i < this.size(); i++) {
+            T myItem = this.get(i);
+            Object otherItem = other.get(i);
+
+            if (!myItem.equals(otherItem)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -161,7 +186,7 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         /**
          * iterator
          */
-        public ArrayDequeIterator(){
+        public ArrayDequeIterator() {
             currIndex = addOne(nextFirst);
         }
 
@@ -170,7 +195,7 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
          * @return returns if it reaches the end
          */
         @Override
-        public boolean hasNext(){
+        public boolean hasNext() {
             return elemLeft != 0;
         }
 
@@ -179,19 +204,14 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
          * @return returns the value of current item
          */
         @Override
-        public T next(){
+        public T next() {
             if (!hasNext()){
                 throw new NoSuchElementException();
             }
             T returnItem = items[currIndex];
             currIndex = addOne(currIndex);
-            elemLeft -=1;
+            elemLeft -= 1;
             return returnItem;
         }
-
-
-
     }
-
-
 }

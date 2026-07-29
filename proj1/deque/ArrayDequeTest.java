@@ -51,10 +51,10 @@ public class ArrayDequeTest {
         for (int i = 0; i < N; i += 1) {
             int operationNumber = StdRandom.uniform(0, 4);
             if (operationNumber == 0) {
-                // addLast
+                // addFirst
                 int randVal = StdRandom.uniform(0, 100);
-                test.addLast(randVal);
-                System.out.println("addLast(" + randVal + ")");
+                test.addFirst(randVal);
+                System.out.println("addFirst(" + randVal + ")");
             } else if (operationNumber == 1) {
                 // size
                 int testSize = test.size();
@@ -67,7 +67,7 @@ public class ArrayDequeTest {
 
             } else if (operationNumber == 3 && !test.isEmpty()) {
                 // size
-                int removed = test.removeLast();
+                int removed = test.removeFirst();
                 System.out.println("removed: " + removed);
             }
         }

@@ -42,7 +42,7 @@ public class MaxArrayDeque<T> extends ArrayDeque<T> {
             return null;
         }
         T currMax = get(0);
-        for (T item : this){
+        for (T item : this) {
             if (c.compare(currMax, item) < 0) {
                 currMax = item;
             }

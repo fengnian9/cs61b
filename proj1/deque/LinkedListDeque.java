@@ -15,7 +15,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         Node next;
 
 
-        public Node(T i,Node p, Node n) {
+        Node(T i, Node p, Node n) {
             item = i;
             prev = p;
             next = n;
@@ -40,7 +40,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public void addFirst(T item) {
         Node oldFirst = sentinel.next;
-        Node newFirst = new Node(item,sentinel,oldFirst);
+        Node newFirst = new Node(item, sentinel, oldFirst);
         oldFirst.prev = newFirst;
         sentinel.next = newFirst;
         size += 1;
@@ -53,7 +53,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public void addLast(T item) {
         Node oldLast = sentinel.prev;
-        Node newLast = new Node(item,oldLast,sentinel);
+        Node newLast = new Node(item, oldLast, sentinel);
         oldLast.next = newLast;
         sentinel.prev = newLast;
         size += 1;
@@ -77,7 +77,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     @Override
     public void printDeque() {
         Node currNode = sentinel.next;
-        while (currNode != sentinel){
+        while (currNode != sentinel) {
             System.out.print(currNode.item + "");
             currNode = currNode.next;
         }
@@ -108,7 +108,9 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
      */
     @Override
     public T removeLast() {
-        if (isEmpty()) return null;
+        if (isEmpty()) {
+            return null;
+        }
         Node oldLast = sentinel.prev;
         Node newLast = oldLast.prev;
         newLast.next = sentinel;
@@ -120,12 +122,14 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     /**
      *
-     * @param index index of the wanted item. 0 is the front, 1 is the next item, and so forth. If no such item exists, returns null
+     * @param index index of the wanted item. 0 is the front,
+     *             1 is the next item, and so forth. If no such item exists,
+     *              returns null
      * @return the value of the item
      */
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size){
+        if (index < 0 || index >= size) {
             return null;
         }
 
@@ -139,21 +143,23 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     /**
      * recursive get
-     * @param index index of the wanted item. 0 is the front, 1 is the next item, and so forth. If no such item exists, returns null
+     * @param index index of the wanted item. 0 is the front,
+     *              1 is the next item, and so forth. If no such item exists,
+     *              returns null
      * @return the item at given index
      */
     public T getRecursive(int index) {
         if (index < 0 || index >= size) {
             return null;
         }
-        return getRecursiveHelper(sentinel.next,index);
+        return getRecursiveHelper(sentinel.next, index);
 
     }
-    private T getRecursiveHelper(Node currNode,int index) {
+    private T getRecursiveHelper(Node currNode, int index) {
         if (index == 0) {
             return currNode.item;
         }
-        return getRecursiveHelper(currNode.next,index - 1);
+        return getRecursiveHelper(currNode.next, index - 1);
 
     }
 
@@ -190,13 +196,13 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         return new LinkedListDequeIterator();
     }
 
-    private class LinkedListDequeIterator implements Iterator<T>{
+    private class LinkedListDequeIterator implements Iterator<T> {
         Node currNode;
 
         /**
          * iterator
          */
-        public LinkedListDequeIterator(){
+        LinkedListDequeIterator() {
             currNode = sentinel.next;
         }
 
@@ -205,8 +211,8 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
          * @return
          */
         @Override
-        public boolean hasNext(){
-            return currNode!=sentinel;
+        public boolean hasNext() {
+            return currNode != sentinel;
         }
 
         /**

@@ -29,7 +29,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      * @param item value of the item added
      */
     @Override
-    public void addFirst(T item){
+    public void addFirst(T item) {
         if (size == items.length) {
             resize(size * 2);
         }
@@ -40,7 +40,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private int minusOne(int index) {
         if (index - 1 < 0) {
-            return index-1+items.length;
+            return index - 1 + items.length;
         }
         return (index - 1);
     }
@@ -56,7 +56,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         items[nextLast] = item;
         nextLast = addOne(nextLast);
-        size+=1;
+        size += 1;
     }
 
     private int addOne(int index) {
@@ -125,7 +125,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (size == 0) {
             return null;
         }
-        if (items.length >= 16 && (items.length / size) >= 4){
+        if (items.length >= 16 && (items.length / size) >= 4) {
             resize(items.length / 2);
         }
         nextLast = minusOne(nextLast);
@@ -143,7 +143,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
      */
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size){
+        if (index < 0 || index >= size) {
             return null;
         }
         return items[(nextFirst + index + 1) % items.length];
@@ -179,14 +179,14 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return new ArrayDequeIterator();
     }
 
-    private class ArrayDequeIterator implements Iterator<T>{
+    private class ArrayDequeIterator implements Iterator<T> {
         int currIndex;
         int elemLeft = size;
 
         /**
          * iterator
          */
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             currIndex = addOne(nextFirst);
         }
 
@@ -205,7 +205,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
          */
         @Override
         public T next() {
-            if (!hasNext()){
+            if (!hasNext()) {
                 throw new NoSuchElementException();
             }
             T returnItem = items[currIndex];

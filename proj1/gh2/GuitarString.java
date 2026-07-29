@@ -49,7 +49,7 @@ public class GuitarString {
     public void tic() {
         Double removed = buffer.removeFirst();
         double currFirst = sample();
-        double newSample= ((currFirst + removed) / 2) * DECAY;
+        double newSample = ((currFirst + removed) / 2) * DECAY;
         buffer.addLast(newSample);
 
     }

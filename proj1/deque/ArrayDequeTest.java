@@ -1,8 +1,10 @@
 package deque;
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
 
 import java.lang.reflect.Array;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
@@ -69,5 +71,38 @@ public class ArrayDequeTest {
                 System.out.println("removed: " + removed);
             }
         }
+    }
+
+    public class IntegerComparator implements Comparator<Integer> {
+
+        // 第二步：必须重写 compare 方法，参数就是两个准备打架的元素
+        @Override
+        public int compare(Integer a, Integer b) {
+
+            // 第三步：写出你的评判标准
+            // 规则铁律：
+            // 如果你觉得 a 赢了 (a > b)，返回任何正数
+            // 如果你觉得 b 赢了 (a < b)，返回任何负数
+            // 如果打平了 (a == b)，返回 0
+
+            return a - b;
+        }
+    }
+
+    @Test
+    public void maxArrayDequeTest(){
+        // 1. 实例化你刚写的裁判
+        Comparator<Integer> myJudge = new IntegerComparator();
+
+
+        MaxArrayDeque<Integer> deque = new MaxArrayDeque<>(myJudge);
+
+
+        deque.addLast(15);
+        deque.addLast(100);
+        deque.addLast(42);
+
+        Integer biggest = deque.max();
+        assertEquals(100,(int) biggest);
     }
 }

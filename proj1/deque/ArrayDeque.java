@@ -3,12 +3,19 @@ package deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * array deque, resizes at run time
+ * @param <T> the generic
+ */
 public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
     private int size;
     private int nextFirst;
     private int nextLast;
     private T[] items;
 
+    /**
+     * constructor method
+     */
     public ArrayDeque(){
         items = (T[])new Object[8];
         size=0;
@@ -17,6 +24,10 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
 
     }
 
+    /**
+     * adds an item to the start of the deque
+     * @param item value of the item added
+     */
     @Override
     public void addFirst(T item){
         if (size == items.length){
@@ -32,6 +43,10 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         return (index - 1);
     }
 
+    /**
+     * adds an item to the start of the deque
+     * @param item value of the item added
+     */
     @Override
     public void addLast(T item){
         if (size == items.length){
@@ -46,14 +61,17 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         return (index+1) % items.length;
     }
 
-    @Override
-    public boolean isEmpty(){
-        return (size == 0);
-    }
 
+    /**
+     *
+     * @return returns the size of the deque
+     */
     @Override
     public int size(){return size;}
 
+    /**
+     * prints the deque
+     */
     @Override
     public void printDeque(){
         for (T item : this) {
@@ -74,6 +92,10 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         nextLast = size;
     }
 
+    /**
+     * removes the first item
+     * @return returns the item removed
+     */
     @Override
     public T removeFirst(){
         if (size == 0) {
@@ -90,6 +112,10 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
 
     }
 
+    /**
+     * removes the last item
+     * @return returns the item removed
+     */
     @Override
     public T removeLast(){
         if (size == 0) {
@@ -106,12 +132,23 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
 
     }
 
-
+    /**
+     * get the value at given index
+     * @param index index to be searched
+     * @return return the item at index given
+     */
     @Override
     public T get(int index) {
+        if (index < 0 || index >= size){
+            return null;
+        }
         return items[(nextFirst+index+1)%items.length];
     }
 
+    /**
+     * iterator
+     * @return returns another iterator
+     */
     @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
@@ -121,15 +158,26 @@ public class ArrayDeque<T> implements Deque<T> , Iterable<T>{
         int currIndex;
         int elemLeft = size;
 
+        /**
+         * iterator
+         */
         public ArrayDequeIterator(){
             currIndex = addOne(nextFirst);
         }
 
+        /**
+         * has next method
+         * @return returns if it reaches the end
+         */
         @Override
         public boolean hasNext(){
             return elemLeft != 0;
         }
 
+        /**
+         * next method
+         * @return returns the value of current item
+         */
         @Override
         public T next(){
             if (!hasNext()){

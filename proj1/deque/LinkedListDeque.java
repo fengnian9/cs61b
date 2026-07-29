@@ -60,14 +60,6 @@ public class LinkedListDeque<T> implements Deque<T> ,Iterable<T>{
         size+=1;
     }
 
-    /**
-     * returns a boolean of whether the deque is empty or not
-     * @return return if it is empty
-     */
-    @Override
-    public boolean isEmpty(){
-        return (size == 0);
-    }
 
     /**
      *
@@ -144,7 +136,11 @@ public class LinkedListDeque<T> implements Deque<T> ,Iterable<T>{
         return currNode.item;
     }
 
-
+    /**
+     * recursive get
+     * @param index index of the wanted item. 0 is the front, 1 is the next item, and so forth. If no such item exists, returns null
+     * @return the item at given index
+     */
     public T getRecursive(int index){
         if (index < 0 || index >= size){
             return null;
@@ -160,7 +156,10 @@ public class LinkedListDeque<T> implements Deque<T> ,Iterable<T>{
 
     }
 
-
+    /**
+     * iterator
+     * @return returns another iterator
+     */
     @Override
     public Iterator<T> iterator() {
         return new LinkedListDequeIterator();
@@ -169,15 +168,26 @@ public class LinkedListDeque<T> implements Deque<T> ,Iterable<T>{
     private class LinkedListDequeIterator implements Iterator<T>{
         Node currNode;
 
+        /**
+         * iterator
+         */
         public LinkedListDequeIterator(){
             currNode = sentinel.next;
         }
 
+        /**
+         * if has next
+         * @return
+         */
         @Override
         public boolean hasNext(){
             return currNode!=sentinel;
         }
 
+        /**
+         * grabs the curr item
+         * @return item
+         */
         @Override
         public T next(){
             if (!hasNext()){

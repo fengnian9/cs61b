@@ -3,14 +3,15 @@
  */
 public class Collatz {
 
-    /**
-     * Buggy implementation of nextNumber!
-     */
+    /** Buggy implementation of nextNumber! */
     public static int nextNumber(int n) {
-        if (n % 2 == 0) {
-            return n / 2;
+        if (n  == 128) {
+            return 1;
+        } else if (n == 5) {
+            return 3 * n + 1;
+        } else {
+            return n * 2;
         }
-        return (3 * n + 1);
     }
 
     public static void main(String[] args) {
@@ -23,5 +24,4 @@ public class Collatz {
         System.out.println();
     }
 }
-
 

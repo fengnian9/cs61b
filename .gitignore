@@ -71,6 +71,7 @@ spec/
 *.jar
 *.war
 *.ear
+javalib/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -102,6 +103,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

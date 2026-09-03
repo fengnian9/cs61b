@@ -1,0 +1,24 @@
+1. init done
+
+2. each saved blob's name is its hash,
+its contents are the content of the actual file.
+
+3. each saved commit's name is its hash,
+and its contents are the Commit object.
+
+4. next moving on to add, it involves staging area,
+first add files to staging area, the file should first be hashed.
+staging area should save the relationship of the file hash,
+possibly a treemap. The real file is saved in blobs.
+
+5. add should compare hashes with curr commit first, if they are the same then it does not have to be added.
+And, if it's already in the staging area, it has to be removed
+
+add should be done.
+
+next would be commit.
+
+done: add and commit;
+next should be remove.
+
+add it in main and Repository, edit StagingArea.

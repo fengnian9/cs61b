@@ -28,11 +28,11 @@ public class StagingArea implements Serializable {
 
 
     public TreeMap<String, String> getAdditions() {
-        return new TreeMap<String, String>(additions);
+        return new TreeMap<>(additions);
     }
 
-    public TreeMap<String, String> getRemovals() {
-        return new TreeMap<String, String>(removals);
+    public Set<String> getRemovals() {
+        return new TreeSet<>(removals);
     }
 
     public boolean noChanges() {

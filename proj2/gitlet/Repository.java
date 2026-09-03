@@ -43,7 +43,7 @@ public class Repository {
     public static void init() {
 
         if (GITLET_DIR.exists()) {
-            throw new GitletException("A Gitlet version-control system already exists in the current directory.");
+            throw error("A Gitlet version-control system already exists in the current directory.");
         }
         setupPersistence();
         Commit initCommit = new Commit("initial commit", null, new TreeMap<>());
@@ -77,15 +77,21 @@ public class Repository {
         return readObject(commitFile, Commit.class);
     }
 
+    private static Commit getCommit(String commitHash) {
+        File commitFile = join(COMMITS_DIR, commitHash);
+        return readObject(commitFile, Commit.class);
+    }
+
     public static void add(String fileName) {
         File file = join(CWD, fileName);
 
         if (!file.exists()) {
-            throw new GitletException("File does not exist.");
+            throw error("File does not exist.");
         }
         byte[] contents = readContents(file);
         String hash = Utils.sha1(contents);
 
+        // get hash of the file from previous commit to compare
         Commit currCommit = getCurrentCommit();
         String oldHash = currCommit.getFileHash(fileName);
 
@@ -95,18 +101,22 @@ public class Repository {
         } else {
             stagingArea.stage(fileName, hash);
         }
+
         File blob = join(BLOBS_DIR, hash);
         writeContents(blob, contents);
+
+        writeObject(STAGINGAREA,stagingArea);
+
     }
 
     public static void commit(String message) {
         if (message.isEmpty()) {
-            throw new GitletException("Please enter a commit message");
+            throw error("Please enter a commit message");
         }
 
         StagingArea stagingArea = readObject(STAGINGAREA,StagingArea.class);
         if (stagingArea.noChanges()) {
-            throw new GitletException("No changes added to the commit.");
+            throw error("No changes added to the commit.");
         }
 
         String currBranch = getCurrentBranch();
@@ -115,7 +125,8 @@ public class Repository {
 
         TreeMap<String, String> files = parentCommit.getTrackedFiles();
         files.putAll(stagingArea.getAdditions());
-        files.remove(stagingArea.getRemovals());
+        files.keySet().removeAll(stagingArea.getRemovals());
+
 
 
         Commit newCommit = new Commit(message, prevHash, files);
@@ -135,17 +146,37 @@ public class Repository {
         StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
         Commit currCommit = getCurrentCommit();
 
-        if (!stagingArea.isStagedForAddition(fileName) && !currCommit.isTracked(fileName)) {
-            throw new GitletException("No reason to remove the file.");
+        boolean staged = stagingArea.isStagedForAddition(fileName);
+        boolean tracked = currCommit.isTracked(fileName);
+
+        if (!staged && !tracked) {
+            throw error("No reason to remove the file.");
         }
 
-        if (currCommit.isTracked(fileName)) {
+        if (staged) {
+            stagingArea.unstage(fileName);
+        }
+
+        if (tracked) {
             stagingArea.stageForRemoval(fileName);
+            if (file.exists()) {
+                restrictedDelete(file);
+            }
         }
 
-        stagingArea.unstage(fileName);
-        stagingArea.stageForRemoval(fileName);
+        writeObject(STAGINGAREA,stagingArea);
 
+    }
 
+    public static void log() {
+        Commit currCommit = getCurrentCommit();
+        while (true) {
+            currCommit.printLog();
+
+            if (!currCommit.hasParent()) {
+                break;
+            }
+            currCommit = getCommit(currCommit.getFirstParentHash());
+        }
     }
 }

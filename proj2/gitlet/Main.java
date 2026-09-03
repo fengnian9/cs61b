@@ -1,7 +1,7 @@
 package gitlet;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+ *  @author fengnian
  */
 public class Main {
 
@@ -14,19 +14,24 @@ public class Main {
             switch (firstArg) {
                 case "init":
                     Repository.init();
-
                     break;
                 case "add":
                     Repository.add(args[1]);
                     break;
                 case "commit":
                     Repository.commit(args[1]);
+                    break;
                 case "rm":
                     Repository.rm(args[1]);
+                    break;
+                case "log":
+                    Repository.log();
+                    break;
             }
         } catch (GitletException e) {
             System.out.println(e.getMessage());
             System.exit(0);
         }
     }
+
 }

@@ -1,24 +1,124 @@
-1. init done
+# Gitlet Devlog
 
-2. each saved blob's name is its hash,
-its contents are the content of the actual file.
+## 1. System Model
 
-3. each saved commit's name is its hash,
-and its contents are the Commit object.
+Repository layout / core state:
 
-4. next moving on to add, it involves staging area,
-first add files to staging area, the file should first be hashed.
-staging area should save the relationship of the file hash,
-possibly a treemap. The real file is saved in blobs.
+- Blob
+  - filename = SHA-1(contents)
+  - contents = snapshot of actual file contents
 
-5. add should compare hashes with curr commit first, if they are the same then it does not have to be added.
-And, if it's already in the staging area, it has to be removed
+- Commit
+  - filename = SHA-1(serialized Commit)
+  - stores:
+    - message
+    - timestamp
+    - parents
+    - trackedFiles: filename -> blob hash (this is done using treemap)
 
-add should be done.
+- StagingArea
+  - additions: filename -> blob hash
+  - removals: set of filenames
 
-next would be commit.
+- HEAD
+  - stores current branch name
 
-done: add and commit;
-next should be remove.
+- refs/heads/<branch>
+  - stores current commit hash
 
-add it in main and Repository, edit StagingArea.
+
+## 2. Command Semantics
+
+### init ✅
+- Create .gitlet structure
+- Create initial commit
+  - parents = []
+  - trackedFiles = {}
+  - timestamp = epoch (date(0))
+- HEAD -> master
+- master -> initial commit
+- create empty StagingArea
+
+### add ✅
+1. Read working file contents (now it only supports 1 file per add command)
+2. Compute blob hash
+3. Compare against current commit's version
+4. If identical:
+   - unstage it if previously staged
+5. Otherwise:
+   - stage filename -> blob hash
+   - persist blob in BLOBS_DIR
+6. persist StagingArea
+
+### commit ✅
+1. Reject empty message / empty staging area
+2. Get current commit
+3. Copy parent's trackedFiles
+4. Apply staged additions
+5. Apply staged removals
+6. Create new Commit
+   - normal commit has one parent
+7. Save new commit
+8. Move current branch pointer to new commit
+9. Clear staging area
+
+### rm ✅
+- If neither staged-for-addition nor tracked:
+  - error
+- If staged for addition:
+  - unstage it
+- If tracked:
+  - stage for removal
+  - delete working file if it still exists
+- persist staging area
+
+### log ✅
+- Start from current commit
+- print current commit
+- follow first parent repeatedly
+- stop after printing initial commit
+
+
+## 3. Important Invariants
+
+- Old Commit objects must never be modified.
+- `trackedFiles` should be copied, not shared by reference.
+- Commit snapshot =
+  parent snapshot + additions - removals.
+- `add` stores the file version at add-time, not commit-time.
+- `HEAD` points to branch name, not commit hash.
+- Current branch file points to current commit hash.
+- Initial commit has an empty parent list, not null.
+
+
+## 4. Current Status
+
+Done:
+- init
+- add
+- commit
+- log
+
+Currently working on:
+- rm
+
+Known issues:
+- none / ...
+
+Tests passed:
+- ...
+Tests failing:
+- ...
+
+
+## 5. NEXT SESSION — START HERE
+
+1. Finish `rm`
+2. Add `rm` to Main command dispatch
+3. Test:
+   - staged-only file
+   - tracked-only file
+   - tracked + staged file
+   - neither staged nor tracked
+   - working file already manually deleted
+4. Then move to global-log / find

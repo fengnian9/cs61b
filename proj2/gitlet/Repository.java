@@ -1,7 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.TreeMap;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -46,7 +46,7 @@ public class Repository {
             throw error("A Gitlet version-control system already exists in the current directory.");
         }
         setupPersistence();
-        Commit initCommit = new Commit("initial commit", null, new TreeMap<>());
+        Commit initCommit = new Commit("initial commit", new ArrayList<>(), new TreeMap<>());
         String initHash = initCommit.getSHA1();
 
 
@@ -60,6 +60,23 @@ public class Repository {
         StagingArea stagingArea = new StagingArea();
         writeObject(STAGINGAREA, stagingArea);
     }
+
+    /**
+     * @return returns set A.removeAll setB;
+     */
+    private static Set<String> difference(Set<String> A, Set<String> B){
+        Set<String> result = new TreeSet<>(A);
+        result.removeAll(B);
+        return result;
+    }
+
+
+    private static Set<String> intersection(Set<String> A, Set<String> B){
+        Set<String> result = new TreeSet<>(A);
+        result.retainAll(B);
+        return result;
+    }
+
 
     private static String getCurrentBranch() {
         return readContentsAsString(HEAD).trim();
@@ -82,14 +99,20 @@ public class Repository {
         return readObject(commitFile, Commit.class);
     }
 
-    public static void add(String fileName) {
-        File file = join(CWD, fileName);
-
+    private static String getFileHash(File file) {
         if (!file.exists()) {
             throw error("File does not exist.");
         }
         byte[] contents = readContents(file);
         String hash = Utils.sha1(contents);
+        return hash;
+    }
+
+    public static void add(String fileName) {
+        File file = join(CWD, fileName);
+
+        String hash = getFileHash(file);
+        byte[] contents = readContents(file);
 
         // get hash of the file from previous commit to compare
         Commit currCommit = getCurrentCommit();
@@ -119,9 +142,13 @@ public class Repository {
             throw error("No changes added to the commit.");
         }
 
+        // get the previous parent's sha1
         String currBranch = getCurrentBranch();
         Commit parentCommit = getCurrentCommit();
         String prevHash = parentCommit.getSHA1();
+
+        ArrayList<String> parents = new ArrayList<>();
+        parents.add(prevHash);
 
         TreeMap<String, String> files = parentCommit.getTrackedFiles();
         files.putAll(stagingArea.getAdditions());
@@ -129,7 +156,7 @@ public class Repository {
 
 
 
-        Commit newCommit = new Commit(message, prevHash, files);
+        Commit newCommit = new Commit(message, parents, files);
         File newCommitFile = join(COMMITS_DIR,newCommit.getSHA1());
         writeObject(newCommitFile, newCommit);
 
@@ -179,4 +206,97 @@ public class Repository {
             currCommit = getCommit(currCommit.getFirstParentHash());
         }
     }
+
+    public static void globalLog() {
+       List<String> files = plainFilenamesIn(COMMITS_DIR);
+        for (String commitHash : files) {
+           getCommit(commitHash).printLog();
+       }
+
+    }
+
+    public static void find(String commitMessage) {
+        List<String> files = plainFilenamesIn(COMMITS_DIR);
+        for (String commitHash : files) {
+            Commit commit = getCommit(commitHash);
+            if (commit.getMessage().equals(commitMessage)) {
+                System.out.println(commit.getSHA1());
+            }
+        }
+    }
+
+    public static void status() {
+        System.out.println("=== Branches ===");
+        String currBranch = getCurrentBranch();
+
+        List<String> branchName = plainFilenamesIn(HEADS_DIR);
+        for (String branch : branchName) {
+            if (branch.equals(currBranch)) {
+                System.out.println("*" + branch);
+            } else {
+                System.out.println(branch);
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Staged Files ===");
+        StagingArea stagingArea = readObject(STAGINGAREA,StagingArea.class);
+        TreeMap<String, String> additions = stagingArea.getAdditions();
+        for (String stagedFile : additions.keySet()) {
+            System.out.println(stagedFile);
+        }
+        System.out.println();
+
+        System.out.println("=== Removed Files ===");
+
+        Set<String> removals = stagingArea.getRemovals();
+        for (String removedFile : removals) {
+            System.out.println(removedFile);
+        }
+        System.out.println();
+
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+
+        Commit currCommit = getCurrentCommit();
+        TreeMap<String, String> expectedState = new TreeMap<>(currCommit.getTrackedFiles());
+
+        expectedState.putAll(additions);
+        expectedState.keySet().removeAll(removals);
+
+        List<String> f = plainFilenamesIn(CWD);
+        TreeSet<String> workingFiles= new TreeSet<>(f);
+        TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
+
+        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles,expectedFiles);
+        TreeSet<String> removedFiles = (TreeSet<String>) difference(expectedFiles,workingFiles);
+        TreeSet<String> commonFiles = (TreeSet<String>) intersection(expectedFiles,workingFiles);
+
+        TreeMap<String, String> printLog = new TreeMap<String, String>();
+
+        for (String file: commonFiles){
+            File fileAddress = join(CWD,file);
+            if (!Objects.equals(expectedState.get(file), getFileHash(fileAddress))) {
+                printLog.put(file, "modified");
+            }
+        }
+
+        for (String removedFile : removedFiles) {
+            printLog.put(removedFile, "deleted");
+        }
+
+        for (Map.Entry<String, String> log : printLog.entrySet()) {
+            System.out.printf("%s (%s)%n", log.getKey(), log.getValue());
+        }
+
+        System.out.println();
+
+        System.out.println("=== Removed Files ===");
+        for (String untracked : untrackedFiles) {
+            System.out.println(untracked);
+        }
+        System.out.println();
+    }
+
+
 }

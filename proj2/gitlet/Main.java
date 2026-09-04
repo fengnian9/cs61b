@@ -27,6 +27,25 @@ public class Main {
                 case "log":
                     Repository.log();
                     break;
+                case "global-log":
+                    Repository.globalLog();
+                    break;
+                case "find":
+                    Repository.find(args[1]);
+                    break;
+                case "status":
+                    Repository.status();
+                    break;
+                case "checkout":
+                    break;
+                case "branch":
+                    break;
+                case "rm-branch":
+                    break;
+                case "reset":
+                    break;
+                case "merge":
+                    break;
             }
         } catch (GitletException e) {
             System.out.println(e.getMessage());

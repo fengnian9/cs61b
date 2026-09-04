@@ -29,14 +29,12 @@ public class Commit implements Serializable {
     private TreeMap<String, String> trackedFiles; // <name, hash>
 
 
-    public Commit(String message, String parentHash, TreeMap<String, String> files) {
+    public Commit(String message, List<String> parentHashes, TreeMap<String, String> files) {
         this.message = message;
-        this.parents = new ArrayList<>();
-        if (parentHash != null) {
-            this.parents.add(parentHash);
-        }
+        this.parents = new ArrayList<>(parentHashes);
+
         this.trackedFiles = new TreeMap<>(files);
-        if (parentHash == null) {
+        if (parents.isEmpty()) {
             this.timeStamp = new Date(0);
         } else {
             this.timeStamp = new Date();
@@ -54,7 +52,7 @@ public class Commit implements Serializable {
     }
 
     public boolean hasParent() {
-        return parents.isEmpty();
+        return !parents.isEmpty();
     }
 
     public String getFirstParentHash() {
@@ -81,6 +79,10 @@ public class Commit implements Serializable {
         System.out.println("Date: " + formatter.format(this.timeStamp));
         System.out.println(this.message);
         System.out.println();
+    }
+
+    public String getMessage() {
+        return this.message;
     }
 
 }

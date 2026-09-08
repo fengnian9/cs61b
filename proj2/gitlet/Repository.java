@@ -64,14 +64,14 @@ public class Repository {
     /**
      * @return returns set A.removeAll setB;
      */
-    private static Set<String> difference(Set<String> A, Set<String> B){
+    private static Set<String> difference(Set<String> A, Set<String> B) {
         Set<String> result = new TreeSet<>(A);
         result.removeAll(B);
         return result;
     }
 
 
-    private static Set<String> intersection(Set<String> A, Set<String> B){
+    private static Set<String> intersection(Set<String> A, Set<String> B) {
         Set<String> result = new TreeSet<>(A);
         result.retainAll(B);
         return result;
@@ -128,7 +128,7 @@ public class Repository {
         File blob = join(BLOBS_DIR, hash);
         writeContents(blob, contents);
 
-        writeObject(STAGINGAREA,stagingArea);
+        writeObject(STAGINGAREA, stagingArea);
 
     }
 
@@ -137,7 +137,7 @@ public class Repository {
             throw error("Please enter a commit message");
         }
 
-        StagingArea stagingArea = readObject(STAGINGAREA,StagingArea.class);
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
         if (stagingArea.noChanges()) {
             throw error("No changes added to the commit.");
         }
@@ -154,10 +154,8 @@ public class Repository {
         files.putAll(stagingArea.getAdditions());
         files.keySet().removeAll(stagingArea.getRemovals());
 
-
-
         Commit newCommit = new Commit(message, parents, files);
-        File newCommitFile = join(COMMITS_DIR,newCommit.getSHA1());
+        File newCommitFile = join(COMMITS_DIR, newCommit.getSHA1());
         writeObject(newCommitFile, newCommit);
 
         String newHash = newCommit.getSHA1();
@@ -191,7 +189,7 @@ public class Repository {
             }
         }
 
-        writeObject(STAGINGAREA,stagingArea);
+        writeObject(STAGINGAREA, stagingArea);
 
     }
 
@@ -208,10 +206,10 @@ public class Repository {
     }
 
     public static void globalLog() {
-       List<String> files = plainFilenamesIn(COMMITS_DIR);
+        List<String> files = plainFilenamesIn(COMMITS_DIR);
         for (String commitHash : files) {
-           getCommit(commitHash).printLog();
-       }
+            getCommit(commitHash).printLog();
+        }
 
     }
 
@@ -240,7 +238,7 @@ public class Repository {
         System.out.println();
 
         System.out.println("=== Staged Files ===");
-        StagingArea stagingArea = readObject(STAGINGAREA,StagingArea.class);
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
         TreeMap<String, String> additions = stagingArea.getAdditions();
         for (String stagedFile : additions.keySet()) {
             System.out.println(stagedFile);
@@ -265,17 +263,17 @@ public class Repository {
         expectedState.keySet().removeAll(removals);
 
         List<String> f = plainFilenamesIn(CWD);
-        TreeSet<String> workingFiles= new TreeSet<>(f);
+        TreeSet<String> workingFiles =  new TreeSet<>(f);
         TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
 
-        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles,expectedFiles);
-        TreeSet<String> removedFiles = (TreeSet<String>) difference(expectedFiles,workingFiles);
-        TreeSet<String> commonFiles = (TreeSet<String>) intersection(expectedFiles,workingFiles);
+        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles, expectedFiles);
+        TreeSet<String> removedFiles = (TreeSet<String>) difference(expectedFiles, workingFiles);
+        TreeSet<String> commonFiles = (TreeSet<String>) intersection(expectedFiles, workingFiles);
 
         TreeMap<String, String> printLog = new TreeMap<String, String>();
 
-        for (String file: commonFiles){
-            File fileAddress = join(CWD,file);
+        for (String file: commonFiles) {
+            File fileAddress = join(CWD, file);
             if (!Objects.equals(expectedState.get(file), getFileHash(fileAddress))) {
                 printLog.put(file, "modified");
             }
@@ -291,12 +289,194 @@ public class Repository {
 
         System.out.println();
 
-        System.out.println("=== Removed Files ===");
+        System.out.println("=== Untracked Files ===");
         for (String untracked : untrackedFiles) {
             System.out.println(untracked);
         }
         System.out.println();
     }
 
+    /**
+     * takes all files of the branch's latest commit, and puts them in the CWD, overwriting files that already exist.
+     * delete files that are untracked by the branch's commit.
+     * if a working file is untracked and would be overwritten by the checkout, throw error.
+     * @param branchName
+     */
+    public static void checkoutBranch(String branchName) {
+
+        File branch = join(HEADS_DIR, branchName);
+        if (!branch.exists()) {
+            throw error("No such branch exists.");
+        } else if (branchName.equals(getCurrentBranch())) {
+            throw error("No need to checkout the current branch.");
+        }
+
+        // get branch's latest commit
+        String commitHash = readContentsAsString(branch);
+        Commit checkoutCommit = getCommit(commitHash);
+
+
+        checkoutCommitSnapshot(checkoutCommit);
+
+        // change branch to the given branch
+        writeContents(HEAD, branchName);
+
+
+    }
+
+    /**
+     * takes in the commit, restore the working directory back to the commit's time.
+     * @param desiredCommit the commit user wants to checkout to.
+     */
+    private static void checkoutCommitSnapshot(Commit desiredCommit) {
+
+        TreeMap<String, String> trackedFiles = desiredCommit.getTrackedFiles();
+
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
+        Set<String> removals = stagingArea.getRemovals();
+        TreeMap<String, String> additions = stagingArea.getAdditions();
+
+        Commit currCommit = getCurrentCommit();
+        TreeMap<String, String> committedFiles = new TreeMap<>(currCommit.getTrackedFiles());
+        TreeMap<String, String> expectedState = new TreeMap<>(currCommit.getTrackedFiles());
+
+        expectedState.putAll(additions);
+        expectedState.keySet().removeAll(removals);
+
+        List<String> f = plainFilenamesIn(CWD);
+        TreeSet<String> workingFiles = new TreeSet<>(f);
+        TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
+
+        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles, expectedFiles);
+        TreeSet<String> dangerousFiles = (TreeSet<String>) intersection(untrackedFiles, trackedFiles.keySet());
+        TreeSet<String> filesToBeRemoved = (TreeSet<String>) difference(committedFiles.keySet(), trackedFiles.keySet());
+
+
+        if (!dangerousFiles.isEmpty()) {
+            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+
+        }
+
+        // overwriting commit content
+        for (Map.Entry<String, String> file : trackedFiles.entrySet()) {
+            String fileName = file.getKey();
+            String blobHash = file.getValue();
+
+            File newFile = join(CWD, fileName);
+            File content = join(BLOBS_DIR, blobHash);
+
+            byte[] commitContent = readContents(content);
+            writeContents(newFile, commitContent);
+        }
+
+        // delete file
+        for (String deleteFile : filesToBeRemoved) {
+            restrictedDelete(deleteFile);
+        }
+
+        stagingArea = new StagingArea();
+        writeObject(STAGINGAREA, stagingArea);
+    }
+
+    public static void checkoutFile(String fileName) {
+
+        Commit currCommit = getCurrentCommit();
+        TreeMap<String, String> trackedFiles = currCommit.getTrackedFiles();
+
+        if (!trackedFiles.containsKey(fileName)) {
+            throw error("File does not exist in that commit");
+        }
+
+        File content = join(BLOBS_DIR, trackedFiles.get(fileName));
+        byte[] commitContent = readContents(content);
+        File file = join(CWD, fileName);
+
+        writeContents(file, commitContent);
+    }
+
+    public static void checkoutFileFromCommit(String commitHash, String fileName) {
+
+        Commit givenCommit = resolveCommit(commitHash);
+
+        TreeMap<String, String> trackedFiles = givenCommit.getTrackedFiles();
+
+        if (!trackedFiles.containsKey(fileName)) {
+            throw error("File does not exist in that commit");
+        }
+
+        File content = join(BLOBS_DIR, trackedFiles.get(fileName));
+        byte[] commitContent = readContents(content);
+
+        File file = join(CWD, fileName);
+        writeContents(file, commitContent);
+
+    }
+
+    /**
+     * finds the commit given a shorten/full commit id
+     * @param commitHash commit id
+     * @return
+     */
+    private static Commit resolveCommit(String commitHash) {
+
+        Commit givenCommit = null;
+
+        List<String> commits = plainFilenamesIn(COMMITS_DIR);
+
+        for (String commit : commits) {
+            if (commit.startsWith(commitHash)) {
+                givenCommit = readObject(join(COMMITS_DIR, commit), Commit.class);
+                return givenCommit;
+            }
+        }
+
+        throw error("No commit with that id exists");
+
+    }
+
+    public static void branch(String branchName) {
+        File newBranch = join(HEADS_DIR, branchName);
+        if (newBranch.exists()) {
+            throw error("A branch with that name already exists.");
+        }
+        String commitHash = getCurrentCommitHash();
+        writeContents(newBranch, commitHash);
+
+    }
+
+    public static void rmBranch(String branchName) {
+        File deleteBranch = join(HEADS_DIR, branchName);
+        if (!deleteBranch.exists()) {
+            throw error("A branch with that name does not exist.");
+        }
+
+        String currBranch = getCurrentBranch();
+        if (Objects.equals(branchName, currBranch)) {
+            throw error("Cannot remove the current branch.");
+        }
+
+        restrictedDelete(deleteBranch);
+    }
+
+    /**
+     * go back to arbitrary commit, given by the user,
+     * change current branch's pointer to the given commit.
+     * @param commitHash
+     */
+    public static void reset(String commitHash) {
+
+        Commit givenCommit = resolveCommit(commitHash);
+        String commitSHA1 = givenCommit.getSHA1();
+
+        checkoutCommitSnapshot(givenCommit);
+
+        String branchName = getCurrentBranch();
+        writeContents(join(HEADS_DIR, branchName), commitSHA1);
+    }
+
+    public static void merge(String branchName) {
+
+        return;
+    }
 
 }

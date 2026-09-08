@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class StagingArea implements Serializable {
-    private TreeMap<String ,String> additions;
+    private TreeMap<String, String> additions;
     private Set<String> removals;
 
     public StagingArea() {
@@ -15,7 +15,7 @@ public class StagingArea implements Serializable {
     }
 
     public void stage(String fileName, String hash) {
-        additions.put(fileName,hash);
+        additions.put(fileName, hash);
     }
 
     public void unstage(String fileName) {

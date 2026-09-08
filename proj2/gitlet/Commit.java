@@ -72,7 +72,7 @@ public class Commit implements Serializable {
         System.out.println("===");
         System.out.println("commit " + this.getSHA1());
         if (this.parents.size() > 1) {
-            System.out.printf("Merge: %.7s %.7s%n", parents.get(0),parents.get(1));
+            System.out.printf("Merge: %.7s %.7s%n", parents.get(0), parents.get(1));
         }
 
         SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);

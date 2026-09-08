@@ -98,6 +98,15 @@ Repository layout / core state:
 - print out staged files, both addition and removal
 - print out removed files
 
+### checkout 
+- do input handling first
+- if input is a file name only, get currCommit, search for the file, and restore it by finding the hash of the file.
+- if commit id is passed along , find the commit first , then find the file.
+- for branch name, fetch the latest commit of the given branch, get all its tracked files and check the file's hashes, if there are different file hashes, print msg and exit.
+- overwrite the files. 
+- after that, if file does not exist in the commit but are in the CWD, delete them. clear the staging area if checked out branch is not current branch. 
+- change HEAD to the curr branch.
+
 
 
 ## 3. Important Invariants

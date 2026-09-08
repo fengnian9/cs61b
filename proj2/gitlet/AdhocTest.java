@@ -2,9 +2,10 @@ package gitlet;
 
 import org.junit.Test;
 
-public class test {
+public class AdhocTest {
+
     @Test
-    public void initTest(){
+    public void initTest() {
         Repository.init();
     }
 

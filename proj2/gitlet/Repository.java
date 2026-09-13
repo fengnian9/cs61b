@@ -436,7 +436,7 @@ public class Repository {
                 (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
 
         if (!dangerousFiles.isEmpty()) {
-            throw error("There is an untracked file in the way; delete it, " + "or add and commit it first.");
+            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
         }
     }
 
@@ -622,8 +622,7 @@ public class Repository {
      * @param currHash
      * @param givenHash
      */
-    private static void handleConflict
-    (String file, String currHash, String givenHash) {
+    private static void handleConflict(String file, String currHash, String givenHash) {
 
         byte[] currContent;
         byte[] givenContent;
@@ -645,8 +644,7 @@ public class Repository {
 
 
 
-    private static MergeAction classifyMergeCase
-            (String splitHash, String currHash, String givenHash) {
+    private static MergeAction classifyMergeCase(String splitHash, String currHash, String givenHash) {
 
         boolean sameResult = Objects.equals(currHash, givenHash);
         boolean currUnchanged = Objects.equals(currHash, splitHash);

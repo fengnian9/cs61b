@@ -436,8 +436,7 @@ public class Repository {
                 (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
 
         if (!dangerousFiles.isEmpty()) {
-            throw error("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            throw error("There is an untracked file in the way; delete it, " + "or add and commit it first.");
         }
     }
 
@@ -518,7 +517,7 @@ public class Repository {
             throw error("Cannot remove the current branch.");
         }
 
-        restrictedDelete(deleteBranch);
+        deleteBranch.delete();
     }
 
     /**
@@ -606,8 +605,7 @@ public class Repository {
                     throw error("unexpected merge action");
             }
         }
-        String commitMessage = "Merged " + branchName +
-                " into " + getCurrentBranch() + ".";
+        String commitMessage = "Merged " + branchName + " into " + getCurrentBranch() + ".";
         commit(commitMessage, givenBranchCommit.getSHA1());
         if (encounteredConflict) {
             System.out.println("Encountered a merge conflict");
@@ -618,12 +616,14 @@ public class Repository {
     }
 
     /**
-     * handles the case where content of the file is changed in both currentCommit and given branch commit
+     * handles the case where content of the file is
+     * changed in both currentCommit and given branch commit
      * @param file
      * @param currHash
      * @param givenHash
      */
-    private static void handleConflict(String file, String currHash, String givenHash) {
+    private static void handleConflict
+    (String file, String currHash, String givenHash) {
 
         byte[] currContent;
         byte[] givenContent;
@@ -639,14 +639,14 @@ public class Repository {
             givenContent = readContents(join(BLOBS_DIR, givenHash));
         }
 
-        writeContents(join(CWD, file),
-                "<<<<<<< HEAD\n", currContent, givenContent, ">>>>>>>\n");
+        writeContents(join(CWD, file), "<<<<<<< HEAD\n", currContent, "=======\n", givenContent, ">>>>>>>\n");
 
     }
 
 
 
-    private static MergeAction classifyMergeCase(String splitHash, String currHash, String givenHash) {
+    private static MergeAction classifyMergeCase
+            (String splitHash, String currHash, String givenHash) {
 
         boolean sameResult = Objects.equals(currHash, givenHash);
         boolean currUnchanged = Objects.equals(currHash, splitHash);

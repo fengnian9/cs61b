@@ -32,6 +32,7 @@ public class StagingArea implements Serializable {
      */
     public void unstage(String fileName) {
         additions.remove(fileName);
+        removals.remove(fileName);
     }
 
     /**

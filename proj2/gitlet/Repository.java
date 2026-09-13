@@ -249,12 +249,19 @@ public class Repository {
     }
 
     public static void find(String commitMessage) {
+
+        boolean commitFound = false;
         List<String> files = plainFilenamesIn(COMMITS_DIR);
         for (String commitHash : files) {
             Commit commit = getCommit(commitHash);
             if (commit.getMessage().equals(commitMessage)) {
                 System.out.println(commit.getSHA1());
+                commitFound = true;
             }
+        }
+
+        if (!commitFound) {
+            System.out.println("Found no commit with that message.");
         }
     }
 
@@ -332,9 +339,11 @@ public class Repository {
     }
 
     /**
-     * takes all files of the branch's latest commit, and puts them in the CWD, overwriting files that already exist.
+     * takes all files of the branch's latest commit,
+     * and puts them in the CWD, overwriting files that already exist.
      * delete files that are untracked by the branch's commit.
-     * if a working file is untracked and would be overwritten by the checkout, throw error.
+     * if a working file is untracked and would be overwritten by the
+     * checkout, throw error.
      * @param branchName
      */
     public static void checkoutBranch(String branchName) {
@@ -380,7 +389,8 @@ public class Repository {
 
         checkUntrackedFileOverwrite(trackedFiles.keySet());
 
-        TreeSet<String> filesToBeRemoved = (TreeSet<String>) difference(committedFiles.keySet(), trackedFiles.keySet());
+        TreeSet<String> filesToBeRemoved = (TreeSet<String>)
+                difference(committedFiles.keySet(), trackedFiles.keySet());
 
         for (Map.Entry<String, String> file : trackedFiles.entrySet()) {
             String fileName = file.getKey();
@@ -415,14 +425,19 @@ public class Repository {
         expectedState.keySet().removeAll(removals);
 
         List<String> f = plainFilenamesIn(CWD);
-        TreeSet<String> workingFiles = new TreeSet<>(f);
-        TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
+        TreeSet<String> workingFiles =
+                new TreeSet<>(f);
+        TreeSet<String> expectedFiles =
+                new TreeSet<>(expectedState.keySet());
 
-        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles, expectedFiles);
-        TreeSet<String> dangerousFiles = (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
+        TreeSet<String> untrackedFiles =
+                (TreeSet<String>) difference(workingFiles, expectedFiles);
+        TreeSet<String> dangerousFiles =
+                (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
 
         if (!dangerousFiles.isEmpty()) {
-            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+            throw error("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
         }
     }
 
@@ -529,7 +544,7 @@ public class Repository {
             throw error("You have uncommitted changes.");
         }
 
-        File givenBranchFile = join(HEADS_DIR,branchName);
+        File givenBranchFile = join(HEADS_DIR, branchName);
         if (!givenBranchFile.exists()) {
             throw error("A branch with that name does not exist.");
         } else if (branchName.equals(getCurrentBranch())) {
@@ -566,7 +581,8 @@ public class Repository {
 
 
         for (String file : allFiles) {
-            switch (classifyMergeCase(splitFiles.get(file), currFiles.get(file), givenFiles.get(file))) {
+            switch (classifyMergeCase(splitFiles.get(file),
+                    currFiles.get(file), givenFiles.get(file))) {
                 case TAKE_GIVEN:
                     checkoutFileFromCommit(givenBranchCommit.getSHA1(), file);
                     add(file);
@@ -585,9 +601,13 @@ public class Repository {
                     add(file);
                     encounteredConflict = true;
                     break;
+
+                default:
+                    throw error("unexpected merge action");
             }
         }
-        String commitMessage = "Merged " + branchName + " into " + getCurrentBranch() + ".";
+        String commitMessage = "Merged " + branchName +
+                " into " + getCurrentBranch() + ".";
         commit(commitMessage, givenBranchCommit.getSHA1());
         if (encounteredConflict) {
             System.out.println("Encountered a merge conflict");
@@ -616,10 +636,11 @@ public class Repository {
         if (givenHash == null) {
             givenContent = new byte[0];
         } else {
-            givenContent = readContents(join(BLOBS_DIR,givenHash));
+            givenContent = readContents(join(BLOBS_DIR, givenHash));
         }
 
-        writeContents(join(CWD,file),"<<<<<<< HEAD\n", currContent, givenContent, ">>>>>>>\n");
+        writeContents(join(CWD, file),
+                "<<<<<<< HEAD\n", currContent, givenContent, ">>>>>>>\n");
 
     }
 
@@ -662,7 +683,9 @@ public class Repository {
         Set<String> givenBranchAncestors = findAncestors(givenBranchHead);
         Set<String> currBranchAncestors = findAncestors(getCurrentCommit());
 
-        Set<String> commonCommitHash = intersection(givenBranchAncestors,currBranchAncestors);
+        Set<String> commonCommitHash =
+                intersection(givenBranchAncestors, currBranchAncestors);
+
         Set<String> candidates = new HashSet<>(commonCommitHash);
 
         for (String commitHash : commonCommitHash) {

@@ -1,5 +1,7 @@
 package gitlet;
 
+import java.io.File;
+
 import static gitlet.Utils.*;
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author fengnian
@@ -23,45 +25,54 @@ public class Main {
 
                 case "add":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.add(args[1]);
                     break;
 
                 case "commit":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.commit(args[1]);
                     break;
 
                 case "rm":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.rm(args[1]);
                     break;
 
                 case "log":
                     checkArgs(args, 1);
+                    checkGitletDirectory();
                     Repository.log();
                     break;
 
                 case "global-log":
                     checkArgs(args, 1);
+                    checkGitletDirectory();
                     Repository.globalLog();
                     break;
 
                 case "find":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.find(args[1]);
                     break;
 
                 case "status":
                     checkArgs(args, 1);
+                    checkGitletDirectory();
                     Repository.status();
                     break;
 
                 case "checkout":
+                    checkGitletDirectory();
                     handleCheckout(args);
                     break;
 
                 case "branch":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.branch(args[1]);
                     break;
 
@@ -72,11 +83,13 @@ public class Main {
 
                 case "reset":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.reset(args[1]);
                     break;
 
                 case "merge":
                     checkArgs(args, 2);
+                    checkGitletDirectory();
                     Repository.merge(args[1]);
                     break;
 
@@ -135,6 +148,15 @@ public class Main {
                 throw error("Incorrect operands.");
         }
     }
+
+    private static void checkGitletDirectory() {
+        File gitletDir = Repository.GITLET_DIR;
+        if (gitletDir.exists()) {
+            return;
+        }
+        throw error("Not in an initialized Gitlet directory.");
+    }
+
 }
 
 

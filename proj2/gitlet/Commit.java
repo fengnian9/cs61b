@@ -81,7 +81,7 @@ public class Commit implements Serializable {
     }
 
     public ArrayList<String> getParents() {
-        return new ArrayList<String> (this.parents);
+        return new ArrayList<String>(this.parents);
     }
 
 

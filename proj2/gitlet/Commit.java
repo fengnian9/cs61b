@@ -28,7 +28,12 @@ public class Commit implements Serializable {
     private List<String> parents;
     private TreeMap<String, String> trackedFiles; // <name, hash>
 
-
+    /**
+     * intializes a commit
+     * @param message the commit's message
+     * @param parentHashes the commit's parents, 0 if it doesnt have one, 2 if there is a merge
+     * @param files
+     */
     public Commit(String message, List<String> parentHashes, TreeMap<String, String> files) {
         this.message = message;
         this.parents = new ArrayList<>(parentHashes);
@@ -41,33 +46,65 @@ public class Commit implements Serializable {
         }
     }
 
+    /**
+     * returns the hash of the file tracked by the commit
+     * @param fileName
+     * @return
+     */
     public String getFileHash(String fileName) {
         return trackedFiles.get(fileName);
 
     }
 
-
+    /**
+     *
+     * @return returns the SHA1 hash of the commit
+     */
     public String getSHA1() {
         return Utils.sha1(Utils.serialize(this));
     }
 
+    /**
+     *
+     * @return true if the commit's parent is not empty
+     */
     public boolean hasParent() {
         return !parents.isEmpty();
     }
 
+    /**
+     *
+     * @return the first parent commit's hash
+     */
     public String getFirstParentHash() {
         return parents.get(0);
     }
 
+    public ArrayList<String> getParents() {
+        return new ArrayList<String> (this.parents);
+    }
 
+
+    /**
+     *
+     * @return return the trackedfiles of the commit
+     */
     public TreeMap<String, String> getTrackedFiles() {
         return new TreeMap<>(this.trackedFiles);
     }
 
+    /**
+     *
+     * @param file
+     * @return returns true if a file is tracked by the commit
+     */
     public boolean isTracked(String file) {
         return this.trackedFiles.containsKey(file);
     }
 
+    /**
+     * prints the log for the commit
+     */
     public void printLog() {
         System.out.println("===");
         System.out.println("commit " + this.getSHA1());
@@ -81,6 +118,10 @@ public class Commit implements Serializable {
         System.out.println();
     }
 
+    /**
+     *
+     * @return the message of the commit
+     */
     public String getMessage() {
         return this.message;
     }

@@ -138,7 +138,7 @@ public class Repository {
         }
 
         StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
-        if (stagingArea.noChanges()) {
+        if (stagingArea.isEmpty()) {
             throw error("No changes added to the commit.");
         }
 
@@ -149,6 +149,41 @@ public class Repository {
 
         ArrayList<String> parents = new ArrayList<>();
         parents.add(prevHash);
+
+        TreeMap<String, String> files = parentCommit.getTrackedFiles();
+        files.putAll(stagingArea.getAdditions());
+        files.keySet().removeAll(stagingArea.getRemovals());
+
+        Commit newCommit = new Commit(message, parents, files);
+        File newCommitFile = join(COMMITS_DIR, newCommit.getSHA1());
+        writeObject(newCommitFile, newCommit);
+
+        String newHash = newCommit.getSHA1();
+        File branchPointer = join(HEADS_DIR, currBranch);
+        writeContents(branchPointer, newHash);
+
+        stagingArea = new StagingArea();
+        writeObject(STAGINGAREA, stagingArea);
+    }
+
+    public static void commit(String message, String givenBranchHash) {
+        if (message.isEmpty()) {
+            throw error("Please enter a commit message");
+        }
+
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
+        if (stagingArea.isEmpty()) {
+            throw error("No changes added to the commit.");
+        }
+
+        // get the previous parent's sha1
+        String currBranch = getCurrentBranch();
+        Commit parentCommit = getCurrentCommit();
+        String prevHash = parentCommit.getSHA1();
+
+        ArrayList<String> parents = new ArrayList<>();
+        parents.add(prevHash);
+        parents.add(givenBranchHash);
 
         TreeMap<String, String> files = parentCommit.getTrackedFiles();
         files.putAll(stagingArea.getAdditions());
@@ -343,21 +378,10 @@ public class Repository {
         expectedState.putAll(additions);
         expectedState.keySet().removeAll(removals);
 
-        List<String> f = plainFilenamesIn(CWD);
-        TreeSet<String> workingFiles = new TreeSet<>(f);
-        TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
+        checkUntrackedFileOverwrite(trackedFiles.keySet());
 
-        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles, expectedFiles);
-        TreeSet<String> dangerousFiles = (TreeSet<String>) intersection(untrackedFiles, trackedFiles.keySet());
         TreeSet<String> filesToBeRemoved = (TreeSet<String>) difference(committedFiles.keySet(), trackedFiles.keySet());
 
-
-        if (!dangerousFiles.isEmpty()) {
-            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
-
-        }
-
-        // overwriting commit content
         for (Map.Entry<String, String> file : trackedFiles.entrySet()) {
             String fileName = file.getKey();
             String blobHash = file.getValue();
@@ -376,6 +400,30 @@ public class Repository {
 
         stagingArea = new StagingArea();
         writeObject(STAGINGAREA, stagingArea);
+    }
+
+    private static void checkUntrackedFileOverwrite(Set<String> filesToBeWritten) {
+
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
+        Set<String> removals = stagingArea.getRemovals();
+        TreeMap<String, String> additions = stagingArea.getAdditions();
+
+        Commit currCommit = getCurrentCommit();
+        TreeMap<String, String> expectedState = new TreeMap<>(currCommit.getTrackedFiles());
+
+        expectedState.putAll(additions);
+        expectedState.keySet().removeAll(removals);
+
+        List<String> f = plainFilenamesIn(CWD);
+        TreeSet<String> workingFiles = new TreeSet<>(f);
+        TreeSet<String> expectedFiles = new TreeSet<>(expectedState.keySet());
+
+        TreeSet<String> untrackedFiles = (TreeSet<String>) difference(workingFiles, expectedFiles);
+        TreeSet<String> dangerousFiles = (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
+
+        if (!dangerousFiles.isEmpty()) {
+            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
     }
 
     public static void checkoutFile(String fileName) {
@@ -476,7 +524,180 @@ public class Repository {
 
     public static void merge(String branchName) {
 
-        return;
+        StagingArea stagingArea = readObject(STAGINGAREA, StagingArea.class);
+        if (!stagingArea.isEmpty()) {
+            throw error("You have uncommitted changes.");
+        }
+
+        File givenBranchFile = join(HEADS_DIR,branchName);
+        if (!givenBranchFile.exists()) {
+            throw error("A branch with that name does not exist.");
+        } else if (branchName.equals(getCurrentBranch())) {
+            throw error("Cannot merge a branch with itself.");
+        }
+
+        Commit givenBranchCommit = getCommit(readContentsAsString(givenBranchFile));
+        Commit splitPoint = findSplitPoint(givenBranchCommit);
+
+        Commit currBranchCommit = getCurrentCommit();
+
+
+        // merge corner cases
+        if (splitPoint.getSHA1().equals(givenBranchCommit.getSHA1())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        } else if (splitPoint.getSHA1().equals(currBranchCommit.getSHA1())) {
+            checkoutBranch(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
+        boolean encounteredConflict = false;
+
+        TreeMap<String, String> splitFiles = splitPoint.getTrackedFiles();
+        TreeMap<String, String> currFiles = currBranchCommit.getTrackedFiles();
+        TreeMap<String, String> givenFiles = givenBranchCommit.getTrackedFiles();
+
+        // create a set where all files present are included for comparison
+        TreeSet<String> allFiles = new TreeSet<>();
+        allFiles.addAll(splitFiles.keySet());
+        allFiles.addAll(currFiles.keySet());
+        allFiles.addAll(givenFiles.keySet());
+
+
+        for (String file : allFiles) {
+            switch (classifyMergeCase(splitFiles.get(file), currFiles.get(file), givenFiles.get(file))) {
+                case TAKE_GIVEN:
+                    checkoutFileFromCommit(givenBranchCommit.getSHA1(), file);
+                    add(file);
+                    break;
+
+                case REMOVE:
+                    rm(file);
+                    break;
+
+                case KEEP_CURRENT:
+
+                    break;
+
+                case CONFLICT:
+                    handleConflict(file, currFiles.get(file), givenFiles.get(file));
+                    add(file);
+                    encounteredConflict = true;
+                    break;
+            }
+        }
+        String commitMessage = "Merged " + branchName + " into " + getCurrentBranch() + ".";
+        commit(commitMessage, givenBranchCommit.getSHA1());
+        if (encounteredConflict) {
+            System.out.println("Encountered a merge conflict");
+        }
+
+
+
+    }
+
+    /**
+     * handles the case where content of the file is changed in both currentCommit and given branch commit
+     * @param file
+     * @param currHash
+     * @param givenHash
+     */
+    private static void handleConflict(String file, String currHash, String givenHash) {
+
+        byte[] currContent;
+        byte[] givenContent;
+
+        if (currHash == null) {
+            currContent = new byte[0];
+        } else {
+            currContent = readContents(join(BLOBS_DIR, currHash));
+        }
+        if (givenHash == null) {
+            givenContent = new byte[0];
+        } else {
+            givenContent = readContents(join(BLOBS_DIR,givenHash));
+        }
+
+        writeContents(join(CWD,file),"<<<<<<< HEAD\n", currContent, givenContent, ">>>>>>>\n");
+
+    }
+
+
+
+    private static MergeAction classifyMergeCase(String splitHash, String currHash, String givenHash) {
+
+        boolean sameResult = Objects.equals(currHash, givenHash);
+        boolean currUnchanged = Objects.equals(currHash, splitHash);
+        boolean givenUnchanged = Objects.equals(givenHash, splitHash);
+
+        if (sameResult) {
+            return MergeAction.KEEP_CURRENT;
+        }
+
+        if (currUnchanged) {
+            if (givenHash == null) {
+                return MergeAction.REMOVE;
+            } else {
+                return MergeAction.TAKE_GIVEN;
+            }
+        }
+
+        if (givenUnchanged) {
+            return MergeAction.KEEP_CURRENT;
+        }
+
+        return MergeAction.CONFLICT;
+    }
+
+    private enum MergeAction {
+        TAKE_GIVEN,
+        REMOVE,
+        KEEP_CURRENT,
+        CONFLICT
+    }
+
+    private static Commit findSplitPoint(Commit givenBranchHead) {
+
+        Set<String> givenBranchAncestors = findAncestors(givenBranchHead);
+        Set<String> currBranchAncestors = findAncestors(getCurrentCommit());
+
+        Set<String> commonCommitHash = intersection(givenBranchAncestors,currBranchAncestors);
+        Set<String> candidates = new HashSet<>(commonCommitHash);
+
+        for (String commitHash : commonCommitHash) {
+
+            Commit commit = getCommit(commitHash);
+            commit.getParents().forEach(candidates::remove);
+
+        }
+
+        String splitPointHash = candidates.iterator().next();
+        return getCommit(splitPointHash);
+    }
+
+    private static Set<String> findAncestors(Commit branchHead) {
+
+        HashSet<String> ancestors = new HashSet<>();
+
+        // worklist is for graph traversal
+        ArrayDeque<String> workList = new ArrayDeque<String>();
+        workList.add(branchHead.getSHA1());
+
+        while (!workList.isEmpty()) {
+
+            String currHash = workList.pop();
+
+            if (!ancestors.add(currHash)) {
+                continue;
+            }
+
+            Commit currCommit = getCommit(currHash);
+            workList.addAll(currCommit.getParents());
+
+        }
+
+        return ancestors;
     }
 
 }

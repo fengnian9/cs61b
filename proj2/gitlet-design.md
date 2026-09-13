@@ -107,6 +107,54 @@ Repository layout / core state:
 - after that, if file does not exist in the commit but are in the CWD, delete them. clear the staging area if checked out branch is not current branch. 
 - change HEAD to the curr branch.
 
+### branch and rm branch
+- changes Head pointer 
+
+### reset
+- reusing codes from checkout
+
+### merge
+
+First:
+- validate preconditions
+- find current head, given head, split point
+
+Special graph cases:
+1. split == given head
+   -> given is ancestor of current
+   -> print message, stop
+
+2. split == current head
+   -> fast-forward CURRENT branch to given head
+   -> do not switch branch
+   -> print message, stop
+
+Normal merge:
+For every filename, compare:
+split / current / given
+
+- only given changed
+  -> take given version and stage
+
+- only current changed
+  -> do nothing
+
+- both ended at same state
+  -> do nothing
+
+- both changed differently
+  -> conflict, write conflict file and stage
+
+"changed" includes:
+- content modification
+- addition
+- deletion
+
+After processing:
+- create merge commit
+- parents = [old current head, given head]
+- print conflict message if any conflict occurred
+
 
 
 ## 3. Important Invariants

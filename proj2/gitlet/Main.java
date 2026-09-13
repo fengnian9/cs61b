@@ -89,18 +89,32 @@ public class Main {
         }
 
     }
+
+    /**
+     * check for separator for the checkout command
+     * @param arg
+     */
     private static void checkSeparator(String arg) {
         if (!(arg.equals("--"))) {
             throw error("Incorrect operands");
         }
     }
 
+    /**
+     * confirm that right number of args has been passed to gitlet
+     * @param args
+     * @param expectedLength
+     */
     private static void checkArgs(String[] args, int expectedLength) {
         if (!(args.length == expectedLength)) {
             throw  error("Incorrect operands.");
         }
     }
 
+    /**
+     * calls different checkout function based on the input args
+     * @param args
+     */
     private static void handleCheckout(String[] args) {
         switch (args.length) {
             case 2:

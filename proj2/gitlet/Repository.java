@@ -436,7 +436,8 @@ public class Repository {
                 (TreeSet<String>) intersection(untrackedFiles, filesToBeWritten);
 
         if (!dangerousFiles.isEmpty()) {
-            throw error("There is an untracked file in the way; delete it, or add and commit it first.");
+            throw error("There is an untracked file in the way;"
+                    + " delete it, or add and commit it first.");
         }
     }
 
@@ -578,9 +579,10 @@ public class Repository {
         allFiles.addAll(currFiles.keySet());
         allFiles.addAll(givenFiles.keySet());
 
+        checkUntrackedFileOverwrite(allFiles);
 
         for (String file : allFiles) {
-            switch (classifyMergeCase(splitFiles.get(file),
+            switch (mergeCase(splitFiles.get(file),
                     currFiles.get(file), givenFiles.get(file))) {
                 case TAKE_GIVEN:
                     checkoutFileFromCommit(givenBranchCommit.getSHA1(), file);
@@ -638,13 +640,14 @@ public class Repository {
             givenContent = readContents(join(BLOBS_DIR, givenHash));
         }
 
-        writeContents(join(CWD, file), "<<<<<<< HEAD\n", currContent, "=======\n", givenContent, ">>>>>>>\n");
+        writeContents(join(CWD, file),
+                "<<<<<<< HEAD\n", currContent, "=======\n", givenContent, ">>>>>>>\n");
 
     }
 
 
 
-    private static MergeAction classifyMergeCase(String splitHash, String currHash, String givenHash) {
+    private static MergeAction mergeCase(String splitHash, String currHash, String givenHash) {
 
         boolean sameResult = Objects.equals(currHash, givenHash);
         boolean currUnchanged = Objects.equals(currHash, splitHash);

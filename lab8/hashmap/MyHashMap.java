@@ -115,10 +115,16 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     @Override
     public void clear() {
         buckets = createTable(DEFAULT_INITIAL_SIZE);
+        size = 0;
     }
 
     @Override
     public boolean containsKey(K key) {
+        for (K item : this) {
+            if (Objects.equals(item, key)) {
+                return true;
+            }
+        }
         return false;
     }
 

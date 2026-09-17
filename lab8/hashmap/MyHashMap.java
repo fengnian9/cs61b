@@ -62,7 +62,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * Returns a new node to be placed in a hash table bucket
      */
     private Node createNode(K key, V value) {
-       return new Node(key, value);
+        return new Node(key, value);
     }
 
     /**
@@ -99,7 +99,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private Collection<Node>[] createTable(int tableSize) {
         Collection<Node>[] table = new Collection[tableSize];
 
-        for (int i = 0; i < table.length; i++){
+        for (int i = 0; i < table.length; i++) {
             table[i] = createBucket();
         }
 
